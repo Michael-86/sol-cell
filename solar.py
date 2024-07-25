@@ -4,8 +4,8 @@ import machine
 import utime
 
 # Connect to Wi-Fi
-ssid = 'YOUR_SSID'
-password = 'YOUR_PASSWORD'
+ssid = 'gtfast'
+password = 'darktitan01'
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
