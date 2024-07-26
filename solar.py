@@ -34,7 +34,7 @@ adc = machine.ADC(26)
 def read_voltage():
     raw_value = adc.read_u16()
     voltage = (raw_value / 65535.0) * 3.3  # Convert to voltage
-    battery_voltage = voltage * (20/ (10 + 20))  # Adjust for voltage divider
+    battery_voltage = voltage * (20 / (10 + 20))  # Adjust for voltage divider
     return battery_voltage
 
 # HTML to send to browsers
@@ -55,17 +55,32 @@ s.listen(1)
 
 print('listening on', addr)
 
-# Listen for connections
+# Function to check if it's time to wake up
+def check_wake_time():
+    current_hour = utime.localtime()[3]
+    if current_hour == 6:  # Check if the hour is 6
+        return True
+    return False
+
+# Main loop
 while True:
-    cl, addr = s.accept()
-    print('client connected from', addr)
-    request = cl.recv(1024)
-    request = str(request)
-    print('Content = {}'.format(request))
+    if check_wake_time():
+        print("Waking up!")
+        # Listen for connections
+        while True:
+            cl, addr = s.accept()
+            print('client connected from', addr)
+            request = cl.recv(1024)
+            request = str(request)
+            print('Content = {}'.format(request))
 
-    battery_voltage = read_voltage()
-    response = html.format(battery_voltage)
+            battery_voltage = read_voltage()
+            response = html.format(battery_voltage)
 
-    cl.send('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n')
-    cl.send(response)
-    cl.close()
+            cl.send('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n')
+            cl.send(response)
+            cl.close()
+        utime.sleep(60)  # Run your code for 1 minute
+    else:
+        print("Going to sleep...")
+        machine.deepsleep(3600000)  # Sleep for 1 hour
