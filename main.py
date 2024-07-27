@@ -2,14 +2,18 @@ import network
 import socket
 import machine
 import utime
+from ota import OTAUpdater
+from WIFI_CONFIG import SSID, PASSWORD
 
-# Connect to Wi-Fi
-ssid = 'gtfast'
-password = 'darktitan01'
+# Ota update source
+firmware_url = "https://github.com/Michael-86/sol-cell/tree/main"
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect(ssid, password)
+wlan.connect(SSID, PASSWORD)
+
+ota_updater = OTAUpdater(SSID, PASSWORD, firmware_url, "main.py")
+ota_updater.download_and_install_update_if_available()
 
 # Wait for connection
 max_wait = 10
@@ -47,6 +51,9 @@ html = """<!DOCTYPE html>
 </html>
 """
 
+# Initialize connection count
+connection_count = 0
+
 # Open socket
 addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
 s = socket.socket()
@@ -55,32 +62,29 @@ s.listen(1)
 
 print('listening on', addr)
 
-# Function to check if it's time to wake up
-def check_wake_time():
-    current_hour = utime.localtime()[3]
-    if current_hour == 6:  # Check if the hour is 6
-        return True
-    return False
-
-# Main loop
+# Listen for connections
 while True:
-    if check_wake_time():
-        print("Waking up!")
-        # Listen for connections
-        while True:
-            cl, addr = s.accept()
-            print('client connected from', addr)
-            request = cl.recv(1024)
-            request = str(request)
-            print('Content = {}'.format(request))
+    cl, addr = s.accept()
+    print('client connected from', addr)
+    request = cl.recv(1024)
+    request = str(request)
+    print('Content = {}'.format(request))
 
-            battery_voltage = read_voltage()
-            response = html.format(battery_voltage)
+    # Increment connection count
+    connection_count += 1
 
-            cl.send('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n')
-            cl.send(response)
-            cl.close()
-        utime.sleep(60)  # Run your code for 1 minute
-    else:
-        print("Going to sleep...")
-        machine.deepsleep(3600000)  # Sleep for 1 hour
+    battery_voltage = read_voltage()
+    response = html.format(battery_voltage)
+
+    cl.send('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n')
+    cl.send(response)
+    cl.close()
+
+    # Decrement connection count
+    connection_count -= 1
+
+    # If no active connections, enter sleep mode
+    if connection_count == 0:
+        print('Entering sleep mode...')
+        wlan.active(False)  # Disable Wi-Fi
+        machine.deepsleep()  # Enter deep sleep
