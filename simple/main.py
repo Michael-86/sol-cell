@@ -1,7 +1,7 @@
 import network
-import socket
 import machine
 import utime
+import socket
 
 # Connect to Wi-Fi
 ssid = 'gtfast'
@@ -9,23 +9,27 @@ password = 'darktitan01'
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect(ssid, password)
 
-# Wait for connection
-max_wait = 10
-while max_wait > 0:
-    if wlan.status() < 0 or wlan.status() >= 3:
-        break
-    max_wait -= 1
-    print('waiting for connection...')
-    utime.sleep(1)
+def connect_to_wifi():
+    wlan.connect(ssid, password)
+    max_wait = 10
+    while max_wait > 0:
+        if wlan.status() < 0 or wlan.status() >= 3:
+            break
+        max_wait -= 1
+        print('Waiting for connection...')
+        utime.sleep(1)
 
-if wlan.status() != 3:
-    raise RuntimeError('network connection failed')
-else:
-    print('connected')
-    status = wlan.ifconfig()
-    print('ip = ' + status[0])
+    if wlan.status() != 3:
+        print('Network connection failed. Retrying...')
+        connect_to_wifi()
+    else:
+        print('Connected')
+        status = wlan.ifconfig()
+        print('IP address:', status[0])
+
+# Initial connection
+connect_to_wifi()
 
 # Set up ADC
 adc = machine.ADC(26)
@@ -56,12 +60,16 @@ s = socket.socket()
 s.bind(addr)
 s.listen(1)
 
-print('listening on', addr)
+print('Listening on', addr)
 
 # Listen for connections
 while True:
+    if wlan.status() != 3:
+        print('Wi-Fi disconnected. Reconnecting...')
+        connect_to_wifi()
+
     cl, addr = s.accept()
-    print('client connected from', addr)
+    print('Client connected from', addr)
     request = cl.recv(1024)
     request = str(request)
     print('Content = {}'.format(request))
