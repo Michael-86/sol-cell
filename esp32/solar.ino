@@ -12,10 +12,9 @@ const int batteryPin = 13; // Analog input pin connected to the voltage divider
 void setup() {
     Serial.begin(115200);
     WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-        Serial.println("Connecting to WiFi...");
-    }
+
+    // Wait for Wi-Fi connection
+    WiFi.waitForConnectResult();
 
     // Initialize the RTC
     if (!rtc.begin()) {
@@ -24,10 +23,10 @@ void setup() {
     }
 
     // Set the wake-up time to 07:00 (7 AM)
-    rtc.adjust(DateTime(__DATE__, "07:00:00"));
+    esp_sleep_enable_timer_wakeup(7 * 3600e6); // 7 hours * 3600 seconds/hour
 
     // Set up the web server
-    server.on("/", HTTP_GET, {
+    server.on("/", HTTP_GET,  {
         float batteryVoltage = readBatteryVoltage(); // Read battery voltage
         int batteryPercentage = map(batteryVoltage, 3.9, 4.0, 0, 100);
 
@@ -40,13 +39,7 @@ void setup() {
 
     server.begin();
 
-    // Calculate the time until midnight (24:00)
-    DateTime now = rtc.now();
-    DateTime midnight(now.year(), now.month(), now.day() + 1, 0, 0, 0);
-    TimeSpan timeUntilMidnight = midnight - now;
-
     // Enter deep sleep mode until the next wake-up time
-    esp_sleep_enable_timer_wakeup(timeUntilMidnight.total_seconds() * 1e6);
     esp_deep_sleep_start();
 }
 
