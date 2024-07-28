@@ -47,13 +47,15 @@ def connect_wifi():
         print('ip = ' + status[0])   
 
 
-def check_wifi_connection():
-    if wlan.isconnected():
-        return True
-    else:
-        print("Wi-Fi disconnected, attempting to reconnect...")
+def check_wifi_connection(max_retries=3):
+    retries = 0
+    while not wlan.isconnected() and retries < max_retries:
+        print(f"Wi-Fi disconnected, attempting to reconnect... ({retries + 1}/{max_retries})")
         connect_wifi()
-        return False 
+        retries += 1
+        time.sleep(2)  # Delay before retrying
+
+    return wlan.isconnected()
 
 
 # Function to read battery voltage
@@ -107,6 +109,9 @@ def create_web_server():
 # Main loop
 def main():
     while True:
+        if not check_wifi_connection():
+            continue  # Retry if connection failed
+            
         light = read_light_level()
 
         if light < light_threshold:
