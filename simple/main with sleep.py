@@ -57,8 +57,8 @@ def read_battery_voltage():
 html = """<!DOCTYPE html>
 <html>
 <head> <title>Pico W</title> </head>
-<body> <h1>Pico W Battery Voltage</h1>
-<p>Battery Voltage: {}v</p>
+<body> <h1>Pico W Data</h1>
+<p>Battery Voltage: {} V</p>
 <p>Light Level: {}</p>
 </body>
 </html>
