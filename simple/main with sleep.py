@@ -47,6 +47,15 @@ def connect_wifi():
         print('ip = ' + status[0])   
 
 
+def check_wifi_connection():
+    if wlan.isconnected():
+        return True
+    else:
+        print("Wi-Fi disconnected, attempting to reconnect...")
+        connect_wifi()
+        return False 
+
+
 # Function to read battery voltage
 def read_battery_voltage():
     # Set up ADC
