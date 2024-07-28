@@ -9,11 +9,13 @@ AsyncWebServer server(90);
 RTC_DS3231 rtc; // Initialize the RTC object
 const int batteryPin = 13; // Analog input pin connected to the voltage divider
 
+// Define your desired username and password
+const char* expectedUsername = "admin";
+const char* expectedPassword = "secure123";
+
 void setup() {
     Serial.begin(115200);
     WiFi.begin(ssid, password);
-
-    // Wait for Wi-Fi connection
     WiFi.waitForConnectResult();
 
     // Initialize the RTC
@@ -27,7 +29,13 @@ void setup() {
 
     // Set up the web server
     server.on("/", HTTP_GET,  {
-        float batteryVoltage = readBatteryVoltage(); // Read battery voltage
+        // Check if the user is authenticated
+        if (!request->authenticate(expectedUsername, expectedPassword)) {
+            return request->requestAuthentication();
+        }
+
+        // Read battery voltage
+        float batteryVoltage = readBatteryVoltage();
         int batteryPercentage = map(batteryVoltage, 3.9, 4.0, 0, 100);
 
         String html = "<html><body>";
