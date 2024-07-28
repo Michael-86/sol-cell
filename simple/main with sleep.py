@@ -10,9 +10,12 @@ photoresistor_pin = machine.ADC(27) # Adjust pin as needed
 
 # Function to read light level from photoresistor
 def read_light_level():
-    # Adjust scaling factor based on your photoresistor
-    light_level = photoresistor_pin.read_u16() * (3.3 / 65535)
-    return light_level
+    try:
+        light_level = photoresistor_adc.read_u16() * (3.3 / 65535)
+        return light_level
+    except Exception as e:
+        print(f"Error reading light level: {e}")
+        return None
 
 # Light threshold for sleep/wake
 light_threshold = 0.5 # Adjust based on your environment
@@ -47,11 +50,15 @@ def connect_wifi():
 # Function to read battery voltage
 def read_battery_voltage():
     # Set up ADC
-    adc = machine.ADC(26)
-    raw_value = adc.read_u16()
-    voltage = (raw_value / 65535.0) * 3.3 # Convert to voltage
-    battery_voltage = voltage * (23 / 10) # Adjust for voltage divider
-    return battery_voltage
+    try:
+        adc = machine.ADC(26)
+        raw_value = adc.read_u16()
+        voltage = (raw_value / 65535.0) * 3.3 # Convert to voltage
+        battery_voltage = voltage * (23 / 10) # Adjust for voltage divider
+        return battery_voltage
+    except Exception as e:
+        print(f"Error reading battery voltage: {e}")
+        return None
 
 # HTML to send to browsers
 html = """<!DOCTYPE html>
