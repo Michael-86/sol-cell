@@ -1,11 +1,12 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <RTClib.h> // RTC library for ESP32
 
 const char* ssid = "YourWiFiSSID";
 const char* password = "YourWiFiPassword";
 
 AsyncWebServer server(80);
-
+RTC_DS3231 rtc; // Initialize the RTC object
 const int batteryPin = 13; // Analog input pin connected to the voltage divider
 
 void setup() {
@@ -16,6 +17,19 @@ void setup() {
         Serial.println("Connecting to WiFi...");
     }
 
+    // Initialize the RTC
+    if (!rtc.begin()) {
+        Serial.println("RTC initialization failed!");
+        while (1);
+    }
+
+    // Set the wake-up time to 07:00 (7 AM)
+    rtc.adjust(DateTime(__DATE__, "07:00:00"));
+
+    // Enable the alarm interrupt
+    rtc.enableAlarm(ALM1);
+
+    // Set up the web server
     server.on("/", HTTP_GET, {
         float batteryVoltage = readBatteryVoltage(); // Read battery voltage
         int batteryPercentage = map(batteryVoltage, 3.9, 4.0, 0, 100);
@@ -28,10 +42,14 @@ void setup() {
     });
 
     server.begin();
+
+    // Enter deep sleep mode
+    esp_sleep_enable_timer_wakeup(7 * 3600 * 1e6); // 7 hours in microseconds
+    esp_deep_sleep_start();
 }
 
 void loop() {
-    // Other tasks or deep sleep if needed
+    // This code won't execute due to deep sleep
 }
 
 float readBatteryVoltage() {
