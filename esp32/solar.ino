@@ -14,51 +14,53 @@ const char* expectedUsername = "admin";
 const char* expectedPassword = "secure123";
 
 void setup() {
-  Serial.begin(115200);
-  WiFi.begin(ssid, password);
-  WiFi.waitForConnectResult();
+    Serial.begin(115200);
+    WiFi.begin(ssid, password);
+    WiFi.waitForConnectResult();
 
-  // Initialize the RTC
-  if (!rtc.begin()) {
-    Serial.println("RTC initialization failed!");
-    while (1);
-  } else {
-    Serial.println("RTC initialized successfully!");
-  }
-
-  // Set the wake-up time to 07:00 (7 AM)
-  esp_sleep_enable_timer_wakeup(7 * 3600e6); // 7 hours * 3600 seconds/hour
-
-  // Set up the web server
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!request->authenticate(expectedUsername, expectedPassword)) {
-      return request->requestAuthentication();
+    // Initialize the RTC
+    if (!rtc.begin()) {
+        Serial.println("RTC initialization failed!");
+        while (1);
+    } else {
+        Serial.println("RTC initialized successfully!");
     }
 
-    float batteryVoltage = readBatteryVoltage();
-    int batteryPercentage = map(batteryVoltage, 3.9, 4.0, 0, 100);
+    // Set the wake-up time to 07:00 (7 AM)
+    esp_sleep_enable_timer_wakeup(7 * 3600e6); // 7 hours * 3600 seconds/hour
 
-    String html;
-    html.reserve(50); // Reserve memory for the string
-    html += "<html><body>";
-    html += "<p>Battery Level: " + String(batteryPercentage) + "%</p>";
-    html += "</body></html>";
+    // Set up the web server
+    server.on("/", HTTP_GET,  {
+        // Check if the user is authenticated
+        if (!request->authenticate(expectedUsername, expectedPassword)) {
+            return request->requestAuthentication();
+        }
 
-    request->send(200, "text/html", html);
-  });
+        // Read battery voltage
+        float batteryVoltage = readBatteryVoltage();
+        int batteryPercentage = map(batteryVoltage, 3.9, 4.0, 0, 100);
 
-  server.begin();
+        String html;
+        html.reserve(50); // Reserve memory for the string
+        html += "<html><body>";
+        html += "<p>Battery Level: " + String(batteryPercentage) + "%</p>";
+        html += "</body></html>";
 
-  // Enter deep sleep mode until the next wake-up time
-  esp_deep_sleep_start();
+        request->send(200, "text/html", html);
+    });
+
+    server.begin();
+
+    // Enter deep sleep mode until the next wake-up time
+    esp_deep_sleep_start();
 }
 
 void loop() {
-  // This code won't execute due to deep sleep
+    // This code won't execute due to deep sleep
 }
 
 float readBatteryVoltage() {
-  int adcValue = analogRead(batteryPin);
-  float voltage = (adcValue / 4095.0) * 3.3; // Assuming 12-bit ADC and 3.3V reference
-  return voltage;
+    int adcValue = analogRead(batteryPin);
+    float voltage = (adcValue / 4095.0) * 3.3; // Assuming 12-bit ADC and 3.3V reference
+    return voltage;
 }
