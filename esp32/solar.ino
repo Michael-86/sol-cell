@@ -38,7 +38,9 @@ void setup() {
         float batteryVoltage = readBatteryVoltage();
         int batteryPercentage = map(batteryVoltage, 3.9, 4.0, 0, 100);
 
-        String html = "<html><body>";
+        String html;
+        html.reserve(50); // Reserve memory for the string
+        html += "<html><body>";
         html += "<p>Battery Level: " + String(batteryPercentage) + "%</p>";
         html += "</body></html>";
 
