@@ -31,7 +31,10 @@ void setup() {
 
   // Print wake-up reason
   printWakeupReason();
-
+  
+  // Shutdown BT
+  btStop();
+  
   // Connect to Wi-Fi and get the current time
   connectToWiFi();
 
