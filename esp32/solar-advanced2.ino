@@ -108,13 +108,15 @@ void loop() {
     if (WiFi.softAPgetStationNum() == 0) {
       if (currentMillis - lastClientCheck >= clientCheckInterval) {
         lastClientCheck = currentMillis;
-        Serial.println("No clients connected, enabling modem sleep...");
+        Serial.println("No clients connected, enabling modem sleep and turning down frequency...");
         WiFi.setSleep(true);
+        setCpuFrequencyMhz(80);
       }
     } else {
       lastClientCheck = currentMillis;
       WiFi.setSleep(false);
-      Serial.println("Client connected, disabling modem sleep...");
+      setCpuFrequencyMhz(240);
+      Serial.println("Client connected, disabling modem sleep turning up frequency...");
     }
   }
 }
