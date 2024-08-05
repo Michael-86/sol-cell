@@ -116,7 +116,6 @@ void loop() {
       lastClientCheck = currentMillis;
       WiFi.setSleep(false);
       setCpuFrequencyMhz(240);
-      btStop();
       Serial.println("Client connected, disabling modem sleep turning up frequency...");
     }
   }
