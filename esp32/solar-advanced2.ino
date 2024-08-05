@@ -3,6 +3,7 @@
 #include "esp_sleep.h"
 #include "time.h"
 
+
 // Wi-Fi credentials
 const char* ssid = "gtfast";
 const char* password = "darktitan01";
@@ -34,7 +35,7 @@ void setup() {
   
   // Shutdown BT
   btStop();
-  
+
   // Connect to Wi-Fi and get the current time
   connectToWiFi();
 
@@ -111,11 +112,13 @@ void loop() {
         Serial.println("No clients connected, enabling modem sleep and turning down frequency...");
         WiFi.setSleep(true);
         setCpuFrequencyMhz(80);
+
       }
     } else {
       lastClientCheck = currentMillis;
       WiFi.setSleep(false);
       setCpuFrequencyMhz(240);
+
       Serial.println("Client connected, disabling modem sleep turning up frequency...");
     }
   }
