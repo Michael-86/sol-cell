@@ -1,0 +1,59 @@
+function doGet(e) {
+  var sheet = SpreadsheetApp.openById("1N98pjNYbdb0X8P9XHEMMryWxSCFk-_Sed2QapgBJ70o").getSheetByName("Data");
+  
+  if (!sheet) {
+    return ContentService.createTextOutput("Sheet not found");
+  }
+
+  var date = e.parameter.date;
+  var batteryVoltage = e.parameter.batteryVoltage;
+  var bootCount = e.parameter.bootCount;
+  var date2 = e.parameter.date2;
+  var sleepDuration = e.parameter.sleepDuration;
+  var uniqueID = e.parameter.uniqueID;
+  var uniqueID2 = e.parameter.uniqueID2;
+
+  // Check if batteryVoltage is undefined or null
+  if (!batteryVoltage || batteryVoltage === "N/A") {
+    // Here goes nothing!
+  } else {
+    batteryVoltage += "V"; // Append "V" to the battery voltage
+  }
+
+  // Check for duplicate entries based on uniqueID or uniqueID2
+  var data = sheet.getDataRange().getValues();
+  Logger.log("Checking for duplicates: uniqueID = " + uniqueID + ", uniqueID2 = " + uniqueID2);
+
+  for (var i = 0; i < data.length; i++) {
+    // Adjust column indices to D (column 3) and I (column 8)
+    if (data[i][3] === uniqueID) {
+      Logger.log("Duplicate uniqueID found in row " + (i + 1));
+      return ContentService.createTextOutput("Duplicate entry for uniqueID");
+    }
+    if (data[i][8] === uniqueID2) {
+      Logger.log("Duplicate uniqueID2 found in row " + (i + 1));
+      return ContentService.createTextOutput("Duplicate entry for uniqueID2");
+    }
+  }
+
+  // Find the next available row in columns A to D
+  var lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow + 1, 1).setValue(date);
+  sheet.getRange(lastRow + 1, 2).setValue(batteryVoltage);
+  sheet.getRange(lastRow + 1, 3).setValue(bootCount);
+  sheet.getRange(lastRow + 1, 4).setValue(uniqueID);
+
+  // Set values in columns G, H, and I
+  sheet.getRange(lastRow + 1, 7).setValue(date2); // Column G
+  sheet.getRange(lastRow + 1, 8).setValue(sleepDuration); // Column H
+  sheet.getRange(lastRow + 1, 9).setValue(uniqueID2); // Column I
+
+  // Change the background color of columns G, H, and I in the same row if new data is added
+  if (date2 || sleepDuration || uniqueID2) {
+    var range = sheet.getRange(lastRow + 1, 1, 1, 9); // Get the range for columns G to I in the new row
+    //var range = sheet.getRange(lastRow + 1, 7, 1, 3); // Get the range for columns G to I in the new row
+    range.setBackground("#FFFF00"); // Set the background color to yellow
+  }
+
+  return ContentService.createTextOutput("Success");
+}
